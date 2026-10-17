@@ -56,6 +56,7 @@ property:
   ## 1=DBSCAN, 2=NMS, 3= DBSCAN+NMS Hybrid, 4 = None(No clustering)
   cluster-mode: 2
   output-blob-names: output_cov/Sigmoid;output_bbox/BiasAdd
+  parse-bbox-func-name: NvDsPostProcessParseCustomResnet
   network-type: 0
   labelfile-path: /opt/nvidia/deepstream/deepstream-7.1/samples/models/Primary_Detector/labels.txt
 
