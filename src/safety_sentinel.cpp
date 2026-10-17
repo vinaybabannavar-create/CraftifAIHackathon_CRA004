@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     g_object_set(source, "location", argv[1], nullptr);
     g_object_set(mux, "batch-size", 1, "width", 1920, "height", 1080,
                  "batched-push-timeout", 40000, nullptr);
-    g_object_set(infer, "config-file-path", "/tmp/config_infer_primary_batch1.txt",
+    g_object_set(infer, "config-file-path", "config/config_infer_primary_batch1.txt",
                  nullptr);
     g_object_set(tracker, "ll-lib-file",
                  "/opt/nvidia/deepstream/deepstream-7.1/lib/libnvds_nvmultiobjecttracker.so",
