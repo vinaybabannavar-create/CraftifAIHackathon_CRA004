@@ -1,260 +1,323 @@
 <div align="center">
 
+<img src="https://img.shields.io/badge/CRA004-EDGE%20AI%20HACKATHON-0D1117?style=for-the-badge&labelColor=0D1117&color=00E5C3" alt="CRA004 Edge AI Hackathon" />
+
 # 🛡️ Workplace Safety Sentinel
 
-### Edge-AI Video Monitoring Prototype
+### Edge AI · Video Analytics · Safety Event Prototyping
 
-**CraftifAI PipeGen Hackathon · Participant ID: CRA004**
+**An experimental computer-vision pipeline exploring person detection, object tracking, and restricted-zone entry events with NVIDIA DeepStream and TensorRT.**
 
-A prototype exploring video-based safety monitoring with NVIDIA DeepStream, TensorRT, and TrafficCamNet.
+<p>
+<img src="https://img.shields.io/badge/NVIDIA-DeepStream%207.1-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="DeepStream" />
+<img src="https://img.shields.io/badge/TensorRT-Inference-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="TensorRT" />
+<img src="https://img.shields.io/badge/C%2B%2B-17-00599C?style=for-the-badge&logo=cplusplus&logoColor=white" alt="C++17" />
+<img src="https://img.shields.io/badge/GStreamer-Video%20Pipeline-EB5A20?style=for-the-badge&logo=gstreamer&logoColor=white" alt="GStreamer" />
+<img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+</p>
 
-![DeepStream](https://img.shields.io/badge/NVIDIA-DeepStream%207.1-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Ubuntu%20%2F%20WSL2-333333?style=for-the-badge&logo=linux&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Prototype%20%7C%20Needs%20Validation-orange?style=for-the-badge)
+<p>
+<img src="https://img.shields.io/badge/Status-Experimental-FFB020?style=flat-square" alt="Experimental" />
+<img src="https://img.shields.io/badge/Validation-Needs%20Visual%20Review-FF6B6B?style=flat-square" alt="Needs visual review" />
+<img src="https://img.shields.io/badge/Platform-Ubuntu%20%2F%20WSL2-333333?style=flat-square&logo=linux&logoColor=white" alt="Ubuntu WSL2" />
+</p>
+
+[Overview](#-overview) · [Architecture](#-architecture) · [Tech Stack](#-technology-stack) · [Build & Run](#-build-and-run) · [Evidence](#-evidence--validation) · [Roadmap](#-roadmap)
 
 </div>
 
 ---
 
-## 📌 Overview
+## ✦ Overview
 
-Workplace Safety Sentinel is an edge-AI prototype exploring how video analytics could support workplace safety monitoring. The intended direction is to help safety teams review camera footage, identify people in monitored areas, and eventually flag potential restricted-zone entry for human review.
+**Workplace Safety Sentinel** is an experimental edge-AI video analytics project created for the **CraftifAI PipeGen Hackathon — Participant ID CRA004**.
 
-For this hackathon attempt, a video file was processed through NVIDIA DeepStream using the TrafficCamNet ONNX model and a TensorRT engine. The pipeline produced an output MP4, but the detection overlays were visibly incorrect. This repository records the work performed, the configuration used, the observed issue, and the next steps needed to make the pipeline reliable.
+The custom C++ application was compiled and executed inside an NVIDIA DeepStream container. In the recorded test, the pipeline processed a sample video, generated an MP4, and wrote 13 JSON Lines (`.jsonl`) incident records. The JSONL file was checked for valid syntax and required fields.
 
-> **Transparency:** This is not a validated safety system. Person tracking, restricted-zone entry events, and structured incident JSON have not been verified as working. The test footage is a street video, not industrial workplace footage.
+> [!IMPORTANT]
+> **This is not a validated workplace safety system.** Detection overlays were visibly incorrect. The 13 emitted event records have not been independently verified as genuine restricted-zone entries. Do not use this prototype to make safety-critical decisions.
 
-## 🎯 Intended goals
+### Project snapshot
 
-- Explore edge inference for video-based monitoring.
-- Investigate how object detection could support safety workflows.
-- Establish a foundation for future restricted-zone monitoring and incident review.
-- Document model-integration and post-processing issues encountered during development.
+| Item | Current result |
+|---|---|
+| Runtime | NVIDIA DeepStream 7.1 container |
+| Model | TrafficCamNet / ResNet-18 ONNX |
+| Inference | TensorRT engine generated/loaded by DeepStream |
+| Application | Custom C++17 GStreamer/DeepStream pipeline |
+| Test input | 1920 × 1080, 25 FPS sample video |
+| Output video | MP4 generated successfully; about 25 MB locally |
+| Event output | 13 parseable JSONL records |
+| Detection quality | **Not validated** — overlays were incorrect |
+| FPS / latency | Not measured |
 
-## 🧱 Pipeline overview
+## ✨ Capabilities & validation status
 
-```text
-Input video
-    ↓
-Video decoding
-    ↓
-Frame preparation / model preprocessing
-    ↓
-TrafficCamNet inference (DeepStream + TensorRT)
-    ↓
-Detection post-processing
-    ↓
-Overlay rendering and video encoding
-    ↓
-Output MP4 + visual evidence
+| Capability | Status | Notes |
+|---|:---:|---|
+| Video input and decoding | ✅ Executed | Sample MP4 processed in test container |
+| TrafficCamNet inference | 🟡 Experimental | TensorRT engine creation/loading observed |
+| Detection visualization | ❌ Needs work | Bounding-box overlays were incorrect |
+| Object tracking | 🟡 Prototype | Tracking quality not visually validated |
+| Restricted-zone event logic | 🟡 Prototype | Events emitted, correctness unverified |
+| JSON Lines output | ✅ Format checked | 13 records parsed; required fields present |
+| FPS / latency benchmark | ⚪ Not measured | No performance claim |
+| PipeGen Pipeline IR evidence | ⚪ Not verified | Must be captured from an actual run |
+
+## 🧭 Architecture
+
+```mermaid
+flowchart LR
+    A["🎞️ Input MP4"] --> B["Video decode<br/>uridecodebin"]
+    B --> C["Frame batching<br/>nvstreammux"]
+    C --> D["TrafficCamNet<br/>nvinfer + TensorRT"]
+    D --> E["Tracking<br/>nvtracker"]
+    E --> F["Safety event logic<br/>C++"]
+    D --> G["Overlay / OSD<br/>nvdsosd"]
+    G --> H["Video encode + mux"]
+    H --> I["Output MP4"]
+    F --> J["Incident records<br/>incidents.jsonl"]
+    classDef core fill:#12352F,stroke:#00E5C3,color:#F0FDF9
+    classDef output fill:#172554,stroke:#60A5FA,color:#EFF6FF
+    class D,E,F core
+    class I,J output
 ```
 
-This is the intended processing path used in the experiment. The current detection visualization is incorrect and requires debugging before detections can be trusted.
+<sub>Conceptual pipeline view. Output quality and exact runtime behavior still require validation.</sub>
 
-## 🛠️ Technology stack
+## 🧰 Technology stack
 
-| Component | Technology / details |
+<div align="center">
+<a href="https://developer.nvidia.com/deepstream-sdk"><img src="https://img.shields.io/badge/NVIDIA-DeepStream-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="DeepStream" /></a>
+<a href="https://developer.nvidia.com/tensorrt"><img src="https://img.shields.io/badge/NVIDIA-TensorRT-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="TensorRT" /></a>
+<a href="https://gstreamer.freedesktop.org/"><img src="https://img.shields.io/badge/GStreamer-Multimedia-EB5A20?style=for-the-badge&logo=gstreamer&logoColor=white" alt="GStreamer" /></a>
+<a href="https://isocpp.org/"><img src="https://img.shields.io/badge/C%2B%2B-17-00599C?style=for-the-badge&logo=cplusplus&logoColor=white" alt="C++17" /></a>
+<a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
+<a href="https://ubuntu.com/"><img src="https://img.shields.io/badge/Ubuntu-WSL2-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu" /></a>
+</div>
+
+| Layer | Technology |
 |---|---|
-| Edge inference | NVIDIA DeepStream 7.1 |
+| Application | C++17 |
+| Video pipeline | GStreamer, NVIDIA DeepStream 7.1 |
+| Inference | NVIDIA TensorRT |
 | Detection model | TrafficCamNet, ResNet-18 ONNX |
-| Inference engine | TensorRT engine loaded by DeepStream |
-| Video processing | GStreamer / DeepStream elements |
-| Runtime environment | Ubuntu on WSL2, Windows 11 host |
-| GPU | NVIDIA GeForce RTX 3050 (6 GB) |
-| Container runtime | Docker with NVIDIA Container Toolkit |
-| Post-processing | DeepStream `nvdspostprocess` configuration |
+| Tracking | DeepStream `nvtracker` |
+| Metadata | JSON Lines (`.jsonl`) |
+| Container runtime | Docker + NVIDIA Container Toolkit |
+| Development host | Windows 11 + Ubuntu on WSL2 |
+| Tested GPU | NVIDIA GeForce RTX 3050, 6 GB |
 
 ## 🖥️ Tested environment
 
-- **Host OS:** Windows 11
-- **Linux environment:** Ubuntu on WSL2
+- **Host:** Windows 11 with Ubuntu on WSL2
 - **GPU:** NVIDIA GeForce RTX 3050 (6 GB)
-- **Container name:** `craftifai-amd64-v3`
-- **Container image:** `craftifaidocker/deepstream:7.1-amd64-v3`
+- **Container:** `craftifai-amd64-v3`
+- **Image:** `craftifaidocker/deepstream:7.1-amd64-v3`
 - **DeepStream:** 7.1
 - **Model:** `resnet18_trafficcamnet_pruned.onnx`
-- **Model input shape observed:** `[batch, 3, 544, 960]`
-- **Output tensors observed:** coverage tensor and bounding-box tensor
+- **Observed model input:** `[batch, 3, 544, 960]`
 
-These are environment details, not a performance benchmark.
+These are environment details, not an accuracy or performance benchmark.
 
-## 📂 Repository structure
+## 📁 Repository structure
 
 ```text
 CraftifAIHackathon_CRA004/
 ├── README.md
 ├── .gitignore
+├── src/
+│   └── safety_sentinel.cpp
 ├── config/
 │   ├── trafficcamnet_detector.yml
 │   └── trafficcamnet_infer_post.txt
 └── evidence/
     ├── trafficcamnet_frame.jpg
-    └── trafficcamnet_post_frame.jpg
+    ├── trafficcamnet_post_frame.jpg
+    └── incidents.jsonl
 ```
 
-- `config/trafficcamnet_detector.yml` — post-processing configuration used in the experiment.
-- `config/trafficcamnet_infer_post.txt` — DeepStream inference configuration used for the post-processing test.
-- `evidence/trafficcamnet_frame.jpg` — frame from the earlier output attempt.
-- `evidence/trafficcamnet_post_frame.jpg` — frame from the later output attempt showing the visualization issue.
+| Path | Purpose |
+|---|---|
+| `src/safety_sentinel.cpp` | Custom C++ DeepStream/GStreamer application |
+| `config/trafficcamnet_detector.yml` | Detector post-processing configuration |
+| `config/trafficcamnet_infer_post.txt` | Inference/post-processing test configuration |
+| `evidence/trafficcamnet_frame.jpg` | Earlier frame used for visual inspection |
+| `evidence/trafficcamnet_post_frame.jpg` | Frame showing the visualization issue |
+| `evidence/incidents.jsonl` | Structured records from the C++ test run |
 
-Generated MP4 files, the model engine, and the input video are not committed. Use video you have permission to process.
+The generated `evidence/safety_sentinel_output.mp4` remains a local artifact and is ignored by Git (`*.mp4`). The input video, model, and TensorRT engine are not included.
 
-## 🚀 Reproduction notes
+## 🚀 Build and run
 
-The following documents the environment and artifacts used during the test. This repository is **not yet a complete, one-command runnable application**.
+> [!NOTE]
+> This is not yet a one-command portable installation. The commands below reflect the tested container setup; paths and dependencies may differ elsewhere.
 
 ### 1. Prerequisites
 
-- Windows 11 with WSL2 and Ubuntu, or a compatible Linux host.
-- A supported NVIDIA GPU and working NVIDIA driver.
-- Docker with NVIDIA Container Toolkit configured.
-- Access to a compatible NVIDIA DeepStream 7.1 container.
-- A video file you have permission to use.
+- NVIDIA GPU and compatible driver
+- Docker configured for GPU access
+- Compatible NVIDIA DeepStream 7.1 container
+- Input video accessible inside the container
+- TrafficCamNet ONNX model and DeepStream libraries
 
-Check whether the container can access your GPU using suitable CUDA/NVIDIA tooling available in your environment.
-
-### 2. Check the container
-
-The experiment used a container named `craftifai-amd64-v3`:
+Check the container:
 
 ```bash
 docker ps --filter name=craftifai-amd64-v3
 ```
 
-Replace the name in subsequent commands if your container is named differently.
+### 2. Compile the application
 
-### 3. Input video
-
-The original test video was located at:
-
-```text
-/home/preet/sentinelai/videos/854100-hd_1920_1080_25fps.mp4
-```
-
-This is a path from the original development machine and will not exist on every system. Copy your own permitted video into the container and update the source URI accordingly.
-
-### 4. Model and engine paths
-
-The model used during the experiment was located at:
-
-```text
-/opt/nvidia/deepstream/deepstream-7.1/samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx
-```
-
-The TensorRT engine loaded by the test was:
-
-```text
-/opt/nvidia/deepstream/deepstream-7.1/samples/models/Primary_Detector/resnet18_trafficcamnet_pruned.onnx_b1_gpu0_fp32.engine
-```
-
-These files come from the container's DeepStream sample installation and are not included in this repository. Confirm they exist in your environment before attempting to run the pipeline.
-
-### 5. Review the configuration
+From the repository root in Ubuntu/WSL2:
 
 ```bash
-cat config/trafficcamnet_infer_post.txt
-cat config/trafficcamnet_detector.yml
+docker cp src/safety_sentinel.cpp craftifai-amd64-v3:/tmp/safety_sentinel.cpp
 ```
 
-Preprocessing, tensor layout, bounding-box decoding, class labels, thresholds, and plugin configuration must match the model and installed DeepStream version.
-
-### 6. Post-processing library build used in the experiment
-
-The following command was used inside the original container when the post-processing library was missing:
+Compile inside the container:
 
 ```bash
-docker exec -it craftifai-amd64-v3 bash -lc '
-cd /opt/nvidia/deepstream/deepstream-7.1/sources/gst-plugins/gst-nvdspostprocess/postprocesslib_impl &&
-export CUDA_VER=12.6 &&
-make -j2
+docker exec craftifai-amd64-v3 bash -lc '
+g++ -std=c++17 -Wall -Wextra \
+  -I/opt/nvidia/deepstream/deepstream-7.1/sources/includes \
+  /tmp/safety_sentinel.cpp \
+  -o /tmp/safety_sentinel \
+  $(pkg-config --cflags --libs gstreamer-1.0) \
+  -L/opt/nvidia/deepstream/deepstream-7.1/lib \
+  -lnvdsgst_meta -lnvds_meta
 '
 ```
 
-`CUDA_VER=12.6` reflects the original environment. Use the CUDA version supported by your own DeepStream installation rather than assuming this is portable.
+### 3. Run on a video
 
-### 7. Running status
+The application accepts an input video path and an output video path. Both must be accessible inside the container.
 
-The experiment used a GStreamer pipeline containing `uridecodebin`, `nvstreammux`, `nvinfer`, `nvdspostprocess`, `nvdsosd`, video conversion, H.264 encoding, and MP4 muxing. DeepStream loaded the TensorRT engine and an output MP4 was created.
+```bash
+docker exec craftifai-amd64-v3 bash -lc '
+export LD_LIBRARY_PATH=/opt/nvidia/deepstream/deepstream-7.1/lib:$LD_LIBRARY_PATH
+cd /tmp
+rm -f incidents.jsonl
+./safety_sentinel \
+  /path/inside/container/input.mp4 \
+  /tmp/safety_sentinel_output.mp4
+'
+```
 
-However, the current repository does not include a complete runner script or a verified portable run command. The model output decoding and visual overlays must be corrected before the output can be treated as valid detections.
+Replace `/path/inside/container/input.mp4` with a real video path in your environment. The original development-machine path is not portable.
 
-## 📊 Validation results
+Expected artifacts after a completed run:
 
-| Check | Observed result |
+- `/tmp/safety_sentinel_output.mp4`
+- `/tmp/incidents.jsonl`
+
+A completed run proves that processing reached completion and produced files; it does **not** prove that detections or events are correct.
+
+### 4. Copy and validate event output
+
+```bash
+docker cp craftifai-amd64-v3:/tmp/incidents.jsonl evidence/incidents.jsonl
+```
+
+Validate JSON syntax and required fields:
+
+```bash
+python3 -c 'import json; from pathlib import Path; p=Path("evidence/incidents.jsonl"); rows=[json.loads(line) for line in p.read_text().splitlines()]; print(f"Valid JSON records: {len(rows)}"); print("Event types:", sorted({r["event"] for r in rows})); print("Required fields present:", all({"event","frame_num","track_id","confidence","bbox"} <= r.keys() for r in rows))'
+```
+
+The recorded test produced **13 parseable records** containing `event`, `frame_num`, `track_id`, `confidence`, and `bbox`. This validates file structure only—not event correctness.
+
+## 🧪 Evidence & validation
+
+| Check | Result |
 |---|---|
-| NVIDIA GPU visible in development environment | Passed |
-| DeepStream 7.1 container available | Passed |
-| TensorRT engine loaded by `nvinfer` | Passed |
-| GStreamer pipeline reached end-of-stream | Passed |
-| Output MP4 created | Passed |
-| Detection overlays visually correct | **Failed — requires debugging** |
-| Person tracking validated | Not verified |
-| Restricted-zone entry events validated | Not verified |
-| JSON incident metadata validated | Not verified |
-| FPS / latency benchmark | Not measured |
+| GPU visible in development environment | ✅ Passed |
+| DeepStream container available | ✅ Passed |
+| C++ application compiled | ✅ Passed |
+| TensorRT engine created/loaded during run | ✅ Observed |
+| Pipeline reached end-of-stream | ✅ Passed |
+| Output MP4 created | ✅ Passed |
+| JSONL syntax and required fields | ✅ Passed for 13 records |
+| Bounding boxes visually correct | ❌ Failed; debugging required |
+| Tracking quality | ⚠️ Not visually validated |
+| Restricted-zone event correctness | ⚠️ Not independently validated |
+| FPS / latency benchmark | ⚪ Not measured |
+| PipeGen Pipeline IR export/screenshot | ⚪ Not verified |
 
-No accuracy, FPS, latency, or safety-performance figures are claimed.
+### Visual evidence
 
-## 🐛 Known issue and evidence
+<div align="center">
+<img src="evidence/trafficcamnet_frame.jpg" alt="TrafficCamNet output frame from an earlier test" width="48%" />
+<img src="evidence/trafficcamnet_post_frame.jpg" alt="Post-processing frame showing incorrect overlays" width="48%" />
+</div>
 
-The generated output frames contain scattered green blocks and overlapping or incorrect bounding-box overlays. Loading the TensorRT engine and creating an MP4 does not prove that the model output was decoded and rendered correctly.
+<sub>Diagnostic screenshots only; they are not proof of accurate detections.</sub>
 
-Evidence is available in `evidence/`:
+### Example event record
 
-- `trafficcamnet_frame.jpg`
-- `trafficcamnet_post_frame.jpg`
+```json
+{
+  "event": "restricted_zone_entry",
+  "frame_num": 20,
+  "track_id": 1,
+  "confidence": 0.408365,
+  "bbox": {
+    "left": 880.488,
+    "top": 0,
+    "width": 457.461,
+    "height": 881.614
+  }
+}
+```
 
-### Investigation performed
+This illustrates the emitted schema. It does not establish that a real restricted-zone entry occurred.
 
-- Inspected the TrafficCamNet ONNX model and its output tensor names.
-- Reviewed the DeepStream inference and post-processing configuration.
-- Built the DeepStream post-processing library in the container.
-- Ran the pipeline and confirmed an output MP4 was produced.
-- Extracted frames for visual inspection and documented the incorrect overlays.
+## 🐛 Known limitations
 
-### Next debugging steps
+1. **Incorrect overlays:** output frames showed scattered green blocks and incorrect/overlapping bounding boxes.
+2. **Post-processing needs validation:** preprocessing, tensor layout, box decoding, class mapping, labels, thresholds, and plugin configuration must match the model.
+3. **Events are not ground-truth validated:** repeated records may reflect detection or tracker instability rather than distinct real entries.
+4. **Test footage is not workplace footage:** the sample was street video in monochrome infrared mode.
+5. **No performance figures:** FPS and latency have not been measured.
+6. **PipeGen evidence is incomplete:** a finalized requirement flow is not proof that the custom C++ pipeline ran end-to-end through PipeGen or that a TensorRT speed report exists.
 
-1. Verify the model's exact preprocessing and normalization requirements.
-2. Confirm output tensor layout, bounding-box decoding, class mapping, and thresholds.
-3. Compare the custom configuration with the configuration supplied for the installed model.
-4. Validate boxes on known frames before enabling downstream logic.
-5. Only after detection is correct, implement and test tracking and restricted-zone events.
-6. Add structured incident output and test it against known scenarios.
+## 🗺️ Roadmap
 
-## 🗺️ Planned improvements
+- [ ] Correct and visually validate TrafficCamNet post-processing.
+- [ ] Compare decoded boxes against known reference frames.
+- [ ] Validate stable tracking and identity persistence.
+- [ ] Define a restricted-zone polygon in frame coordinates.
+- [ ] Test entry logic against labeled scenarios.
+- [ ] Add timestamps and useful zone/object context to event records.
+- [ ] Create a repeatable setup and run script.
+- [ ] Verify the custom source in PipeGen's supported workflow.
+- [ ] Capture genuine Pipeline IR and TensorRT performance evidence.
+- [ ] Measure FPS and latency under a repeatable test setup.
+- [ ] Test on appropriate workplace footage with permission.
 
-- Correct and validate TrafficCamNet post-processing.
-- Add person tracking with stable object IDs.
-- Configure a user-defined restricted-zone polygon.
-- Detect and test entry events for tracked people crossing into that zone.
-- Write verified incident records to JSON with timestamps and zone/object details.
-- Add a repeatable runner script and dependency checks.
-- Capture a clean Pipeline IR graph and genuine end-to-end demo after validation.
-- Measure FPS and latency under a documented test setup.
+## 🔐 Safety & responsible use
 
-These are planned features, not completed functionality.
-
-## 🔐 Safety and responsible use
-
-- Process video only when you have permission.
-- Treat detections as fallible and require human review before acting.
+- Process video only when you have permission and a lawful basis.
+- Treat detections as fallible and require human review.
 - Do not use this prototype as the sole basis for safety-critical decisions.
-- Review workplace policies, privacy requirements, and data-retention rules before deployment.
+- Apply appropriate privacy, access-control, retention, and workplace-policy safeguards before deployment.
 
-## 🏁 Hackathon submission
-
-- **Project:** Workplace Safety Sentinel
-- **Participant ID:** CRA004
-- **Repository:** `CraftifAIHackathon_CRA004`
-
-This repository currently documents the experiment, configurations, and visual evidence. It does not yet contain a complete runnable PipeGen export, a verified Pipeline IR graph screenshot, or a validated restricted-zone safety pipeline. Add those artifacts only after they have actually been produced and checked.
-
----
+## 🏁 Hackathon details
 
 <div align="center">
 
-Built as an edge-AI safety monitoring prototype for the CraftifAI PipeGen Hackathon.
+**CraftifAI PipeGen Hackathon**  
+**Project:** Workplace Safety Sentinel  
+**Participant ID:** CRA004
 
-**Honest validation first. Reliable safety workflows next.**
+<a href="https://github.com/vinaybabannavar-create/CraftifAIHackathon_CRA004">
+<img src="https://img.shields.io/badge/Explore%20the%20source-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="Explore source on GitHub" />
+</a>
+
+<br/><br/>
+
+**Build responsibly. Validate honestly. Improve continuously.**
+
+<sub>Made for experimentation with edge AI, video analytics, and safety-event workflows.</sub>
 
 </div>
