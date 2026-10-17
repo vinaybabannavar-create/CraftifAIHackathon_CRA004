@@ -1,0 +1,13 @@
+{"event":"restricted_zone_entry","frame_num":20,"track_id":1,"confidence":0.408365,"bbox":{"left":880.488,"top":0,"width":457.461,"height":881.614}}
+{"event":"restricted_zone_entry","frame_num":37,"track_id":1,"confidence":0.461345,"bbox":{"left":621.336,"top":318.466,"width":669.347,"height":759.549}}
+{"event":"restricted_zone_entry","frame_num":79,"track_id":1,"confidence":0.480069,"bbox":{"left":999.01,"top":351.593,"width":80.3871,"height":204.472}}
+{"event":"restricted_zone_entry","frame_num":105,"track_id":1,"confidence":0.536034,"bbox":{"left":1127.98,"top":356.04,"width":68.9121,"height":211.885}}
+{"event":"restricted_zone_entry","frame_num":116,"track_id":4,"confidence":0.64137,"bbox":{"left":970.766,"top":367.826,"width":74.9494,"height":196.367}}
+{"event":"restricted_zone_entry","frame_num":116,"track_id":5,"confidence":0.819624,"bbox":{"left":859.489,"top":389.219,"width":95.0472,"height":191.657}}
+{"event":"restricted_zone_entry","frame_num":191,"track_id":1,"confidence":0.442839,"bbox":{"left":514.737,"top":0,"width":688.881,"height":951.288}}
+{"event":"restricted_zone_entry","frame_num":207,"track_id":5,"confidence":0.415005,"bbox":{"left":1146.34,"top":365.706,"width":77.7363,"height":189.883}}
+{"event":"restricted_zone_entry","frame_num":211,"track_id":4,"confidence":0.543706,"bbox":{"left":962.196,"top":378.428,"width":85.5553,"height":198.115}}
+{"event":"restricted_zone_entry","frame_num":218,"track_id":1,"confidence":0.716059,"bbox":{"left":1063.93,"top":365.582,"width":61.752,"height":184.072}}
+{"event":"restricted_zone_entry","frame_num":313,"track_id":5,"confidence":0.413663,"bbox":{"left":912.945,"top":0,"width":694.359,"height":940.574}}
+{"event":"restricted_zone_entry","frame_num":334,"track_id":5,"confidence":0.489147,"bbox":{"left":756.272,"top":0,"width":783.502,"height":921.863}}
+{"event":"restricted_zone_entry","frame_num":376,"track_id":5,"confidence":0.602845,"bbox":{"left":1090.88,"top":384.77,"width":69.9521,"height":169.205}}
