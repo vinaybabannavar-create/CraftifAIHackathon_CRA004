@@ -479,6 +479,8 @@ docker exec craftifai-amd64-v3 bash -lc 'export LD_LIBRARY_PATH=/opt/nvidia/deep
 
 For a different environment, replace the project directory and input video path with the correct paths.
 
+**Environment note:** The container path above is historical and has not been re-verified in the current session because `craftifai-amd64-v3` is not running. Confirm the container and mounted paths before using the command.
+
 **Important:** The application writes `incidents.jsonl` in its current working directory. The command above runs from the project directory, so it may create or modify a root-level `incidents.jsonl`. Back up any existing file before rerunning if you need to preserve its records.
 
 The output video is requested at:
