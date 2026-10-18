@@ -926,6 +926,16 @@ No unverified benchmark, production deployment, or completed PipeGen performance
 
 **Project repository:** [CraftifAIHackathon_CRA004](https://github.com/vinaybabannavar-create/CraftifAIHackathon_CRA004)
 
+👥 Team Members
+
+Vinay Babannavar
+
+Arihant Alagoudar
+
+Bhartesh Bhujaballi
+
+Premkumar BK
+
 To explore the project:
 
 1. Clone the repository.
